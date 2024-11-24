@@ -3,7 +3,7 @@ Official Implementation of Motivational Interviewing Client Simulator for Paper 
 
 ## Introduction
 
-**[Speaker Verification in Agent-generated Conversations](https://aclanthology.org/2024.acl-long.307/)** 
+**[Consistent Client Simulation for Mental Health Counseling]()** 
 </br>
 Yizhe Yang<sup>1</sup>,
 Palakorn Achananuparp<sup>2</sup>,
