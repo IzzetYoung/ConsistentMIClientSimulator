@@ -8,31 +8,40 @@ import os
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 
-openai_client = OpenAI(
-    api_key=OPENAI_API_KEY,
-    base_url=OPENAI_BASE_URL
-)
+openai_client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
-@backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.Timeout, openai.APIError, openai.APIConnectionError, openai.APIStatusError))
-def get_precise_response(messages, model="gpt-4o-mini", temperature=0.2, top_p=0.1):
-        message = openai_client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            top_p=top_p,
-        )
-        return message.choices[0].message.content
+
+@backoff.on_exception(
+    backoff.expo,
+    (
+        openai.RateLimitError,
+        openai.Timeout,
+        openai.APIError,
+        openai.APIConnectionError,
+        openai.APIStatusError,
+    ),
+)
+def get_precise_response(messages, model="gpt-3.5-turbo-0125", temperature=0.2, top_p=0.1):
+    message = openai_client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        top_p=top_p,
+    )
+    return message.choices[0].message.content
+
 
 def heuristic_moderator(context):
-    if 'goodbye' in context[-1].lower() or 'good bye' in context[-1].lower():
+    if "goodbye" in context[-1].lower() or "good bye" in context[-1].lower():
         return True
     words1 = set(context[-1].lower().split())
     words2 = set(context[-3].lower().split())
     intersection = words1.intersection(words2)
     overlap_degree = len(intersection) / min(len(words1), len(words2))
     if overlap_degree > 0.9:
-        return True  
-    return False  
+        return True
+    return False
+
 
 def moderator(context):
     user_prompt = """Your task is to assess the current state of the conversation (the most recent utterances) and determine whether the conversation has concluded.
@@ -106,42 +115,50 @@ Here is a new Conversation Snippet:
 
 Question: Should the conversation be concluded?
 """
-    user_prompt = user_prompt.replace('[@context]', "\n".join(context[-5:]))
-    response = get_precise_response([{'role': 'user', 'content': user_prompt}])
-    if response and 'yes' in response.lower():
+    user_prompt = user_prompt.replace("[@context]", "\n".join(context[-5:]))
+    response = get_precise_response([{"role": "user", "content": user_prompt}])
+    if response and "yes" in response.lower():
         return True
     return False
 
+
 class Env:
-    def __init__(self,
-                 client,
-                 counselor,
-                 max_turns=20,
-                 initial_context=["Counselor: Hello. How are you?", "Client: I am good. What about you?"],
-                 output_file=None):
+    def __init__(
+        self,
+        client,
+        counselor,
+        max_turns=20,
+        initial_context=[
+            "Counselor: Hello. How are you?",
+            "Client: I am good. What about you?",
+        ],
+        output_file=None,
+    ):
         self.client = client
         self.counselor = counselor
         self.conversation = copy.deepcopy(initial_context)
         self.max_turns = max_turns
         if output_file:
-            self.output_file = open(output_file, 'w')
+            self.output_file = open(output_file, "w")
             for context in self.conversation:
-                self.output_file.write(context + '\n')
+                self.output_file.write(context + "\n")
         else:
             self.output_file = None
             for context in self.conversation:
                 print(context)
-    
+
     def output(self, utterance):
+        if not os.path.exists(os.path.dirname(self.output_file)):
+            os.makedirs(os.path.dirname(self.output_file))
         if self.output_file:
-            self.output_file.write(utterance + '\n')
+            self.output_file.write(utterance + "\n")
         else:
             print(utterance)
-        
+
     def clean_utterance(self, utterance):
-        utterance = re.sub(r'\[.*?\]', '', utterance)
+        utterance = re.sub(r"\[.*?\]", "", utterance)
         return utterance
-    
+
     def interact(self):
         for _ in range(self.max_turns):
             counselor_response = self.counselor.reply()
@@ -149,15 +166,19 @@ class Env:
             counselor_response = self.clean_utterance(counselor_response)
             self.client.receive(counselor_response)
             self.conversation.append(counselor_response)
-            if (heuristic_moderator(self.conversation)) or (_ > 20 and moderator(self.conversation)):
+            if (heuristic_moderator(self.conversation)) or (
+                _ > 20 and moderator(self.conversation)
+            ):
                 break
             client_response = self.client.reply()
-            if 'Terminate' in client_response:
+            if "Terminate" in client_response:
                 self.output(client_response)
                 break
             self.output(client_response)
             client_response = self.clean_utterance(client_response)
             self.counselor.receive(client_response)
             self.conversation.append(client_response)
-            if (heuristic_moderator(self.conversation)) or (_ > 20 and moderator(self.conversation)):
+            if (heuristic_moderator(self.conversation)) or (
+                _ > 20 and moderator(self.conversation)
+            ):
                 break

@@ -8,13 +8,23 @@ from openai.types.chat.completion_create_params import ResponseFormatJSONObject
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 
-openai_client = OpenAI(
-    api_key=OPENAI_API_KEY,
-    base_url=OPENAI_BASE_URL
+openai_client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+
+
+@backoff.on_exception(
+    backoff.expo,
+    (
+        openai.RateLimitError,
+        openai.Timeout,
+        openai.APIError,
+        openai.APIConnectionError,
+        openai.APIStatusError,
+        openai.InternalServerError,
+    ),
 )
-
-@backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.Timeout, openai.APIError, openai.APIConnectionError, openai.APIStatusError, openai.InternalServerError))
-def get_chatbot_response(messages, model="gpt-4o-mini", temperature=0.7, top_p=0.8, max_tokens=150):
+def get_chatbot_response(
+    messages, model="gpt-3.5-turbo-0125", temperature=0.7, top_p=0.8, max_tokens=150
+):
     message = openai_client.chat.completions.create(
         model=model,
         messages=messages,
@@ -25,8 +35,20 @@ def get_chatbot_response(messages, model="gpt-4o-mini", temperature=0.7, top_p=0
     return message.choices[0].message.content
 
 
-@backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.Timeout, openai.APIError, openai.APIConnectionError, openai.APIStatusError, openai.InternalServerError))
-def get_precise_response(messages, model="gpt-4o-mini", temperature=0.2, top_p=0.1, max_tokens=150):
+@backoff.on_exception(
+    backoff.expo,
+    (
+        openai.RateLimitError,
+        openai.Timeout,
+        openai.APIError,
+        openai.APIConnectionError,
+        openai.APIStatusError,
+        openai.InternalServerError,
+    ),
+)
+def get_precise_response(
+    messages, model="gpt-3.5-turbo-0125", temperature=0.2, top_p=0.1, max_tokens=150
+):
     message = openai_client.chat.completions.create(
         model=model,
         messages=messages,
@@ -35,10 +57,22 @@ def get_precise_response(messages, model="gpt-4o-mini", temperature=0.2, top_p=0
         max_tokens=max_tokens,
     )
     return message.choices[0].message.content
-    
 
-@backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.Timeout, openai.APIError, openai.APIConnectionError, openai.APIStatusError, openai.InternalServerError))
-def get_json_response(messages, model="gpt-4o-mini", temperature=0.2, top_p=0.1, max_tokens=150):
+
+@backoff.on_exception(
+    backoff.expo,
+    (
+        openai.RateLimitError,
+        openai.Timeout,
+        openai.APIError,
+        openai.APIConnectionError,
+        openai.APIStatusError,
+        openai.InternalServerError,
+    ),
+)
+def get_json_response(
+    messages, model="gpt-3.5-turbo-0125", temperature=0.2, top_p=0.1, max_tokens=150
+):
     format = ResponseFormatJSONObject()
     message = openai_client.chat.completions.create(
         model=model,
@@ -46,7 +80,7 @@ def get_json_response(messages, model="gpt-4o-mini", temperature=0.2, top_p=0.1,
         temperature=temperature,
         top_p=top_p,
         max_tokens=max_tokens,
-        response_format=format
+        response_format=format,
     )
     return message.choices[0].message.content
 
@@ -76,22 +110,25 @@ At the core of MI are a few basic principles, including expressing empathy and d
 """
         first_counselor = """Counselor: Hello. How are you?"""
         first_client = """Client: I am good. What about you?"""
-        self.messages = [{'role': 'system', 'content': system_prompt}, 
-                         {'role': 'assistant', 'content': first_counselor},
-                         {'role': 'user', 'content': first_client}]
+        self.messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "assistant", "content": first_counselor},
+            {"role": "user", "content": first_client},
+        ]
         self.model = model
-    
-    def receive(self, response):
-        self.messages.append({'role': 'user', 'content': response})
-    
-    def reply(self):
-        response = get_chatbot_response(messages=self.messages, model=self.model, max_tokens=150)
-        response = ' '.join(response.split('\n'))
-        response = response.replace('*', '').replace('#', '')
-        if not response.startswith('Counselor: '):
-            response = f"Counselor: {response}"
-        if 'Client: ' in response:
-            response = response.split('Client: ')[0]
-        self.messages.append({'role': 'assistant', 'content': response})
-        return response
 
+    def receive(self, response):
+        self.messages.append({"role": "user", "content": response})
+
+    def reply(self):
+        response = get_chatbot_response(
+            messages=self.messages, model=self.model, max_tokens=150
+        )
+        response = " ".join(response.split("\n"))
+        response = response.replace("*", "").replace("#", "")
+        if not response.startswith("Counselor: "):
+            response = f"Counselor: {response}"
+        if "Client: " in response:
+            response = response.split("Client: ")[0]
+        self.messages.append({"role": "assistant", "content": response})
+        return response

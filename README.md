@@ -22,7 +22,9 @@ export OPENAI_API_KEY=      # Your OpenAI API KEY
 export OPENAI_BASE_URL=     # Your OpenAI BASE URL
 python src/generate.py \
     # GPT model you want to use
-    --model gpt-4o-mini \
+    --model gpt-3.5-turbo-0125 \
+    # Retriever model you want to use
+    --retriever_path BAAI/bge-reranker-v2-m3 \
     # Path to the profiles.jsonl file
     --profile_path ./annotations/profiles.jsonl \
     # Output directory to save the generated conversations
@@ -40,6 +42,8 @@ python src/generate.py \
 **[2024-09-17]** Implement Dynamic Engagement module by incorporating interested topics to assess engagement levels and provide feedback to counselors.
 
 **[2024-11-20]** Enhance Self-Refine method to refine responses, ensuring greater accuracy in reflecting provided instructions.
+
+**[2025-1-16]** Enhance the topic tree structure to represent it as a topic graph. Implement a retrieval-based approach for the client simulator to identify the most relevant topic at the present time.
 
 ## Inconsistent Behaviors
 
@@ -183,11 +187,31 @@ As shown in following table, simulations without action control show low likenes
 
 *Note: Human evaluation of human-like score based on generated sessions and manual interaction. Simulations without action control show low human-like score, while our framework demonstrates higher consistency with real clients. The annotators demonstrated a high agreement, achieving a Kappa score greater than 0.62.*
 
-### High Capable Motivational Interviewing Counselor Agent
+## Topic Graph and Retrieval-based Topic Perception
+
+Through observation, it has been identified that certain topics can be related to multiple parents, such as Child Custody, which is related to both Law and Family. Consequently, we expand the topic tree structure to represent these relationships as a topic graph.
+
+![](./figures/topic_graph.png)
+
+Furthermore, based on our experiment, we have observed that the topic perception capability of LLMs (specifically, GPT-4o-2024-11-20) is limited when the accuracy of topic prediction is low. To address this limitation, we leverage the design of our topics, which are related to Wikipedia, and employ a retrieval-based method to rank topics. This method compares the current session topic with corresponding Wikipedia passages to determine the most relevant topics. Based on automatic metrics and human inspection, the retrieval-based method can provide more relevant topics, and we employ the top-1 topic recommended by BGE-ReRanker as the perceived topic of the client.
+
+
+|                          | ACC/Recall@N   |
+|--------------------------|----------------|
+| LLM Prediction           | 7.37%          |
+| BGE-ReRank Top 1         | 58.95%         |
+| BGE-ReRank Top 3         | 90.18%         |
+| BGE-ReRank Top 5         | 94.97%         |
+| BGE-ReRank Top 5 + LLM   | 40.39%         |
+
+Additionally, we utilize the Dijkstra algorithm to calculate the distance between the current session topic and the motivation topic. To enhance the accuracy of the distance estimation and engagement adjustment, we assign different values to the edges between different levels of the topic hierarchy. For instance, the distance between two superclass topics is set to 3, while the distance between a superclass topic and a coarse-grained topic under it is set to 2.
+
+## High Capable Motivational Interviewing Counselor Agent
 
 Additionally, we offer a highly capable Motivational Interviewing Counselor Agent (CAMI), which can be accessed through the repository [MICounselorAgent](https://github.com/IzzetYoung/MICounselorAgent).
 
+Notably, since we have incorporated the client simulation into the CAMI framework, this repository will be deprecated for updates. Kindly refer to the client simulation code in CAMI to obtain the most recent client simulation.
+
 ## TODO
-- [ ] Upload the annotation scripts
 - [ ] Upload the citation information
 
