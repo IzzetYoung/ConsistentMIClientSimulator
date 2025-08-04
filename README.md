@@ -1,9 +1,9 @@
 # ConsistentMIClientSimulator
-Official Implementation of Motivational Interviewing Client Simulator for Paper [Consistent Client Simulation for Mental Health Counseling]().
+Official Implementation of Motivational Interviewing Client Simulator for Paper [Consistent Client Simulation for Mental Health Counseling](https://aclanthology.org/2025.acl-long.1021/).
 
 ## Introduction
 
-**[Consistent Client Simulation for Mental Health Counseling]()** 
+**[Consistent Client Simulation for Mental Health Counseling](https://aclanthology.org/2025.acl-long.1021/)** 
 </br>
 Yizhe Yang<sup>1</sup>,
 Palakorn Achananuparp<sup>2</sup>,
