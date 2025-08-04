@@ -212,6 +212,32 @@ Additionally, we offer a highly capable Motivational Interviewing Counselor Agen
 
 Notably, since we have incorporated the client simulation into the CAMI framework, this repository will be deprecated for updates. Kindly refer to the client simulation code in CAMI to obtain the most recent client simulation.
 
-## TODO
-- [ ] Upload the citation information
+## Citation
+```
+@inproceedings{yang-etal-2025-consistent,
+    title = "Consistent Client Simulation for Motivational Interviewing-based Counseling",
+    author = "Yang, Yizhe  and
+      Achananuparp, Palakorn  and
+      Huang, Heyan  and
+      Jiang, Jing  and
+      Lim, Nicholas Gabriel  and
+      Ern, Cameron Tan Shi  and
+      Kit, Phey Ling  and
+      Xiuhui, Jenny Giam  and
+      Pinto, John  and
+      Lim, Ee-Peng",
+    editor = "Che, Wanxiang  and
+      Nabende, Joyce  and
+      Shutova, Ekaterina  and
+      Pilehvar, Mohammad Taher",
+    booktitle = "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = jul,
+    year = "2025",
+    address = "Vienna, Austria",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.acl-long.1021/",
+    pages = "20959--20998",
+    ISBN = "979-8-89176-251-0",
+}
+```
 
